@@ -1,0 +1,12 @@
+.show-slide-up-enter-active,
+.show-slide-up-leave-active {
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+}
+
+.show-slide-up-enter-from,
+.show-slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}

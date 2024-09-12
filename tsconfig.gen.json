@@ -1,0 +1,13 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "include": [
+    "scripts/*.ts"
+  ],
+  "compilerOptions": {
+    "declaration": false,
+    "rootDir": "./scripts",
+    "outDir": "./scripts/dist",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+  }
+}

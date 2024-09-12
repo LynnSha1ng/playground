@@ -1,0 +1,25 @@
+$sm: 640px;
+$md: 768px;
+$lg: 900px;
+$xl: 1024px;
+$xl2: 1280px;
+$xl3: 1536px;
+
+@mixin screenBelow($breakpoint) {
+  @media screen and (max-width: $breakpoint) {
+    @content;
+  }
+}
+
+@mixin screenAbove($breakpoint) {
+  @media screen and (min-width: $breakpoint) {
+    @content;
+  }
+}
+
+@mixin flex($justify: null, $align: null, $flow: null) {
+  display: flex;
+  flex-flow: $flow;
+  justify-content: $justify;
+  align-items: $align;
+}
