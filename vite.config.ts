@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 
 export default defineConfig({
-  base: './',
+  base: import.meta.env.DEV ? './' : './playground',
   plugins: [vue(), vueJsx()],
   resolve: {
     alias: {
