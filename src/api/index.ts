@@ -36,7 +36,7 @@ export function fetchPostList(index: number) {
 }
 
 export function fetchStat(): Promise<Stat> {
-  return fetchData('/data/stat/stat.json');
+  return fetchData('/playground/data/stat/stat.json');
 }
 
 export function fetchPostInfo(name: string) {
