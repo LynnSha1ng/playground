@@ -5,7 +5,14 @@ interface GenDataWorkOptions {
   sourceDir: string;
   targetDir: string | string[];
   work: (batch: string[]) => Promise<void>;
-  errMsg: (i: number) => string;
+}
+
+async function batchWork(target: any[], fn: (batch: any[]) => Promise<any>) {
+  const BATCH_SIZE = parseInt(process.env.BATCH_SIZE!);
+  for (let i = 0; i < target.length; i += BATCH_SIZE) {
+    const batch = target.slice(i, i + BATCH_SIZE);
+    await fn(batch);
+  }
 }
 
 /**
@@ -21,7 +28,7 @@ async function checkTarget(target: string) {
       const deletePromises = targetFiles.map(filename => {
         return unlink(join(target, filename));
       });
-      await Promise.all(deletePromises);
+      await batchWork(deletePromises, batch => Promise.all(batch));
     }
   } catch (_) {
     await mkdir(target, { recursive: true });
@@ -35,31 +42,21 @@ async function checkTarget(target: string) {
  * @param options.sourceDir 源目录
  * @param options.targetDir 一个或多个目标目录，用于生成数据前的检查
  * @param options.work 对每一批文件执行的操作
- * @param options.errMsg 返回错误消息的函数
  */
 export async function doGenDataWork(options: GenDataWorkOptions) {
-  const BATCH_SIZE = parseInt(process.env.VITE_BATCH_SIZE!);
-  const { sourceDir, targetDir, work, errMsg } = options;
-
-  let batchIndex = 1;
+  const { sourceDir, targetDir, work } = options;
 
   try {
     if (typeof targetDir === 'string') {
       await checkTarget(targetDir);
     } else {
-      for (const target of targetDir) {
-        await checkTarget(target);
-      }
+      await Promise.all(targetDir.map(checkTarget));
     }
 
     const files = await readdir(sourceDir);
-    for (let i = 0; i < files.length; i += BATCH_SIZE) {
-      const batch = files.slice(i, i + BATCH_SIZE);
-      await work(batch);
-      batchIndex += 1;
-    }
+    await batchWork(files, work);
     return files.length;
   } catch (err) {
-    console.error(errMsg(batchIndex), '\n', err);
+    console.error(err);
   }
 }

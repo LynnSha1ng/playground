@@ -7,7 +7,7 @@
       <ul class="post-stats">
         <li class="stat-item" v-for="(label, key) of statMap" :key="`stat-item-${key}`">
           <span class="stat-label">{{ label }}</span>
-          <span class="stat-total">{{ total![key] }}</span>
+          <span class="stat-total">{{ total ? total[key] : '*' }}</span>
         </li>
       </ul>
       <ul class="contacts">
@@ -18,29 +18,40 @@
       </ul>
     </div>
 
-    <div class="info-card">
+    <div class="info-card" v-if="$route.name !== 'categories'">
       <h3>
         <i class="title-icon iconfont icon-wenjianjia"></i>
         <span class="card-title">分类</span>
       </h3>
-      <ul class="categories">
-        <li class="category-item" v-for="(total, label) of cate" :key="`cate-item-${label}`">
-          <span>{{ label }}</span>
+      <ul class="categories" v-if="cate">
+        <li class="category-item" v-for="[label, total] of cateShown" :key="`cate-item-${label}`">
+          <span class="category-label">{{ label }}</span>
+          <span class="category-total">（{{ total }}）</span>
+        </li>
+        <li class="category-item">
+          <span class="category-label">测试超级长的分类名字</span>
+          <span class="category-total">（10）</span>
         </li>
       </ul>
+      <router-link custom :to="{ name: 'categories' }" v-slot="{ navigate }">
+        <span class="has-more" v-if="cateHasMore" @click="navigate" role="link">查看更多</span>
+      </router-link>
     </div>
 
-    <div class="info-card">
+    <div class="info-card" v-if="$route.name !== 'tags'">
       <h3>
         <i class="title-icon iconfont icon-24gf-tags2"></i>
         <span class="card-title">标签</span>
       </h3>
-      <ul class="tags">
-        <li class="tag-item" v-for="(total, label) of tag" :key="`tag-item-${label}`">
+      <ul class="tags" v-if="tag">
+        <li class="tag-item" v-for="[label, total] of tagShown" :key="`tag-item-${label}`">
           <span class="tag-label">{{ label }}</span>
-          <span class="tag-total">{{ total }}</span>
+          <sup class="tag-total">{{ total }}</sup>
         </li>
       </ul>
+      <router-link custom :to="{ name: 'tags' }" v-slot="{ navigate }">
+        <span class="has-more" v-if="tagHasMore" @click="navigate" role="link">查看更多</span>
+      </router-link>
     </div>
 
     <div class="info-card">
@@ -60,10 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Stat } from '@/api';
-
-// import { ref,watch, onMounted, onBeforeMount } from 'vue';
-import { fetchStat, fetchPostInfo } from '@/api';
+import { fetchStat } from '@/api';
 
 const statMap = {
   post: '文章',
@@ -71,20 +79,29 @@ const statMap = {
   tag: '标签',
 };
 
-let total: Stat['total'] | null = null;
-let cate: Record<string, number> | null = null;
-let tag: Record<string, number> | null = null;
-await (async () => {
-  const stats = await fetchStat();
-  total = stats.total;
-  cate = stats.details.cate;
-  tag = stats.details.tag;
-})();
+const { total, cate, tag } = await fetchStat();
+const getShownData = (raw: Record<string, number>, shownCount: number) => {
+  let shownData: [string, number][] | undefined = void 0;
+  let hasMore: boolean | undefined = void 0;
+  if (raw) {
+    const rawEntries = Object.entries(raw);
+    shownData = rawEntries.slice(0, shownCount);
+    hasMore = rawEntries.length > shownCount;
+  }
+  return {
+    shownData,
+    hasMore,
+  };
+};
+const { shownData: cateShown, hasMore: cateHasMore } = getShownData(cate, 5);
+const { shownData: tagShown, hasMore: tagHasMore } = getShownData(tag, 75);
 </script>
 
 <style lang="scss" scoped>
 .side-info {
   @include flex(null, null, column);
+  order: 1; // 确保路由切换时始终渲染在右侧
+  flex-shrink: 0;
   row-gap: 12px;
   width: 300px;
   @include screenBelow($lg) {
@@ -130,15 +147,17 @@ await (async () => {
 }
 
 .stat-item {
-  @include flex(null, center, column);
-  row-gap: 8px;
+  text-align: center;
 }
 
 .stat-label {
+  display: block;
+  margin-block-end: 8px;
   font-size: small;
 }
 
 .stat-total {
+  display: block;
   font-size: large;
   font-weight: bold;
 }
@@ -154,11 +173,25 @@ await (async () => {
 }
 
 .categories {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  @include flex(null, null, column);
+  row-gap: 8px;
 }
 
 .category-item {
+  @include flex(space-between, center);
+  padding: 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: background-color 0.25s;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--bg-3);
+  }
+}
+
+.category-label {
+  @include line-clamp(1);
 }
 
 .tags {
@@ -167,23 +200,32 @@ await (async () => {
 }
 
 .tag-item {
-  @include flex;
-  column-gap: 2px;
   padding: 8px;
   border-radius: 8px;
   font-size: small;
   font-weight: bold;
   transition: background-color 0.25s;
+  cursor: pointer;
 
   &:hover {
     background-color: var(--bg-3);
   }
 }
 
+.tag-label {
+  margin-inline-end: 4px;
+}
+
 .tag-total {
   color: var(--text-grey);
   font-size: x-small;
   font-weight: normal;
-  transform: translate3d(0, -0.25em, 0);
+}
+
+.has-more {
+  color: var(--text-grey);
+  font-size: small;
+  text-align: center;
+  cursor: pointer;
 }
 </style>

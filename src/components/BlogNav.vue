@@ -5,35 +5,41 @@
       'shadow-bottom': showNav,
     }">
     <h3>
-      <router-link :to="{ name: 'homepage' }">{{ title }}</router-link>
+      <router-link :to="{ name: 'home' }">{{ title }}</router-link>
     </h3>
-    <ul
-      :class="{ 'nav-item-list': true, '--pc-only': listType === 'labeled' }"
-      v-for="(itemList, listType) in items"
-      :key="`nav-item-list-${listType}`">
-      <router-link
-        v-for="(item, i) in itemList"
-        :key="`nav-item-${listType}-${i}`"
+
+    <ul class="nav-items --pc-only">
+      <RouterLink
+        v-for="item in items.labeled"
+        :key="`nav-item-labeled-${item}`"
+        custom
+        :to="item.to"
+        v-slot="{ navigate }">
+        <li class="nav-item underline-grow" @click="navigate" role="link">
+          <i :class="['item-icon', 'iconfont', item.iconClass]"></i>
+          <span class="item-label"> {{ item.label }}</span>
+        </li>
+      </RouterLink>
+    </ul>
+
+    <ul class="nav-items">
+      <RouterLink
+        v-for="item in items.unlabeled"
+        :key="`nav-item-unlabeled-${item}`"
         custom
         :to="item.to"
         v-slot="{ navigate }">
         <li
-          :class="{
-            'nav-item': true,
-            '--mobile-only': 'mobileOnly' in item && item.mobileOnly,
-            'underline-grow': true,
-          }"
-          :title="listType === 'unlabeled' && 'label' in item ? item.label : void 0"
+          class="nav-item underline-grow item-icon iconfont"
+          :class="item.iconClass"
+          :title="item.label"
           @click="navigate"
-          role="link">
-          <i :class="['item-icon', 'iconfont', item.iconClass]"></i>
-          <span class="item-label" v-if="listType === 'labeled'">
-            {{ item.label }}
-          </span>
-        </li>
-      </router-link>
+          role="link"></li>
+      </RouterLink>
+      <li class="nav-item underline-grow item-icon iconfont icon-caidan --mobile-only"></li>
     </ul>
   </header>
+  <div class="top-nav-placeholder"></div>
 </template>
 
 <script setup lang="ts">
@@ -43,13 +49,12 @@ interface NavItem {
   iconClass: string;
   label: string;
   to: RouteLocationRaw;
-  mobileOnly: boolean;
 }
 export interface NavProps {
   title: string;
   items: {
-    labeled: Omit<NavItem, 'mobileOnly'>[];
-    unlabeled: Optional<NavItem, 'label' | 'mobileOnly'>[];
+    labeled: NavItem[];
+    unlabeled: NavItem[];
   };
 }
 defineProps<NavProps>();
@@ -87,13 +92,17 @@ useEventListener(
 </script>
 
 <style lang="scss" scoped>
+.top-nav-placeholder {
+  height: 60px;
+}
+
 .top-nav {
   position: fixed;
   z-index: 1145;
   @include flex(space-between, center);
   width: 100%;
   height: 60px;
-  max-width: $xl3;
+  max-width: $max;
   padding: 0 20px;
   background-color: color-mix(in oklch, var(--bg-2), transparent 25%);
   transform: translateY(v-bind(navTransY));
@@ -104,9 +113,7 @@ useEventListener(
   }
 }
 
-.nav-item-list {
-  @include flex;
-
+.nav-items {
   &.--pc-only {
     position: absolute;
     left: 50%;
@@ -120,10 +127,11 @@ useEventListener(
 .nav-item {
   --color-grow-line: var(--primary);
 
-  @include flex(center, center);
+  display: inline;
   padding: 8px;
   margin-inline: 4px;
   cursor: pointer;
+
   &:hover {
     color: var(--primary);
   }

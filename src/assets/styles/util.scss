@@ -3,7 +3,7 @@ $md: 768px;
 $lg: 900px;
 $xl: 1024px;
 $xl2: 1280px;
-$xl3: 1536px;
+$max: 1388px;
 
 @mixin screenBelow($breakpoint) {
   @media screen and (max-width: $breakpoint) {
@@ -17,9 +17,36 @@ $xl3: 1536px;
   }
 }
 
+@mixin screenBetween($min, $max) {
+  @media screen and (min-width: $min) and (max-width: $max) {
+    @content;
+  }
+}
+
 @mixin flex($justify: null, $align: null, $flow: null) {
   display: flex;
   flex-flow: $flow;
   justify-content: $justify;
   align-items: $align;
+}
+
+@mixin line-clamp($lines) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $lines;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+}
+
+@mixin inline-separator($sep, $margin-inline: 4px) {
+  > *:not(i) {
+    display: inline;
+    margin-inline-end: $margin-inline;
+
+    &:not(:last-child)::after {
+      content: $sep;
+      margin-inline-start: $margin-inline;
+    }
+  }
 }

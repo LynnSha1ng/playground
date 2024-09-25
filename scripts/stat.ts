@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 import { doGenDataWork } from './_template.js';
 
-const OFFSET = parseInt(process.env.VITE_LIST_OFFSET!);
+const LIMIT = parseInt(process.env.VITE_LIST_LIMIT!);
 
 const INFO_DIR = process.env.INFO_DATA_DIR!;
 const STAT_DIR = process.env.STAT_DATA_DIR!;
@@ -19,8 +19,8 @@ export async function genStatData() {
     async work(batch) {
       let listIndex = 1;
       const batchNoSuffix = batch.map(filename => basename(filename, '.json'));
-      for (let i = 0; i < batchNoSuffix.length; i += OFFSET) {
-        const list = batchNoSuffix.slice(i, i + OFFSET);
+      for (let i = 0; i < batchNoSuffix.length; i += LIMIT) {
+        const list = batchNoSuffix.slice(i, i + LIMIT);
         const path = join(STAT_DIR, `list-${listIndex}.json`);
         await writeFile(path, JSON.stringify(list, null, 2));
         listIndex += 1;
@@ -50,8 +50,6 @@ export async function genStatData() {
         }
       }
     },
-
-    errMsg: i => `处理第${i}批文章info数据时出错，停止生成stat数据。`,
   });
 
   await writeFile(
@@ -63,10 +61,8 @@ export async function genStatData() {
           cate: Array.from(cateStatMap.entries()).length,
           tag: Array.from(tagStatMap.entries()).length,
         },
-        details: {
-          cate: Object.fromEntries(cateStatMap),
-          tag: Object.fromEntries(tagStatMap),
-        },
+        cate: Object.fromEntries(cateStatMap),
+        tag: Object.fromEntries(tagStatMap),
       },
       null,
       2,
