@@ -1,4 +1,5 @@
 {
+  "name": "Buffer",
   "title": "Node.js Buffer",
   "description": "测试",
   "category": "编程",
@@ -7,6 +8,6 @@
     "Node.js",
     "Buffer"
   ],
-  "birthTime": "2024-09-12T10:34:21.611Z",
-  "mTime": "2024-09-12T10:34:21.611Z"
+  "birthTime": "2024-09-25T11:58:42.799Z",
+  "mTime": "2024-09-25T11:58:42.799Z"
 }
